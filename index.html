@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700;800&family=Unbounded:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;}
+  body{margin:0;}
+  ::selection{background:#E0115F;color:#fff;}
+  @keyframes muToast{from{opacity:0;transform:translate(-50%,12px);}to{opacity:1;transform:translate(-50%,0);}}
+  @keyframes muIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+  input:focus,button:focus{outline:none;}
+  input::placeholder{color:#B9ABA0;}
+</style>
+</helmet>
+<div style="font-family:'Golos Text',system-ui,sans-serif;background:#FAF6F1;min-height:100vh;color:#241C18;-webkit-font-smoothing:antialiased;">
+
+  <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;left:50%;bottom:28px;z-index:90;transform:translateX(-50%);background:#241C18;color:#fff;padding:13px 22px;border-radius:999px;font-size:14px;font-weight:600;box-shadow:0 12px 30px rgba(36,28,24,.28);animation:muToast .25s ease;white-space:nowrap;">{{ toast }}</div>
+  </sc-if>
+
+  <header style="position:sticky;top:0;z-index:50;background:rgba(250,246,241,.86);backdrop-filter:blur(14px);border-bottom:1px solid #EDE3D9;">
+    <div style="max-width:1200px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;">
+      <div onClick="{{ goHome }}" style="display:flex;align-items:center;gap:9px;cursor:pointer;flex-shrink:0;">
+        <span style="width:11px;height:11px;border-radius:50%;background:#E0115F;display:inline-block;"></span>
+        <span style="font-family:'Unbounded',sans-serif;font-weight:700;font-size:19px;letter-spacing:-.5px;">МУР<span style="color:#E0115F;">&</span>ГАВ</span>
+      </div>
+      <div style="flex:1;min-width:200px;display:flex;align-items:center;gap:9px;background:#fff;border:1px solid #EBE0D5;border-radius:999px;padding:10px 16px;">
+        <span style="color:#C2B3A6;font-size:15px;">⌕</span>
+        <input value="{{ query }}" onChange="{{ onQuery }}" onFocus="{{ goCatalog }}" placeholder="Поиск: корм, игрушки, поводок…" style="border:none;background:none;flex:1;font-family:inherit;font-size:14px;color:#241C18;" />
+      </div>
+      <sc-if value="{{ loggedIn }}" hint-placeholder-val="{{ false }}">
+        <div onClick="{{ goAccount }}" style="display:flex;align-items:center;gap:7px;background:#FBF1DC;border:1px solid #EFD9A8;color:#9A6B14;padding:9px 15px;border-radius:999px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap;">
+          <span style="width:7px;height:7px;border-radius:50%;background:#C8902A;display:inline-block;"></span>{{ pointsStr }} Б
+        </div>
+      </sc-if>
+      <button onClick="{{ goCart }}" style="position:relative;display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #EBE0D5;border-radius:999px;padding:10px 16px;font-family:inherit;font-weight:600;font-size:14px;color:#241C18;cursor:pointer;" style-hover="border-color:#E0115F;">
+        Корзина
+        <sc-if value="{{ hasCart }}" hint-placeholder-val="{{ false }}">
+          <span style="background:#E0115F;color:#fff;min-width:20px;height:20px;border-radius:999px;font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;padding:0 5px;">{{ cartCount }}</span>
+        </sc-if>
+      </button>
+      <sc-if value="{{ loggedIn }}" hint-placeholder-val="{{ true }}">
+        <button onClick="{{ goAccount }}" style="background:#241C18;color:#fff;border:none;border-radius:999px;padding:11px 18px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;white-space:nowrap;">{{ userName }}</button>
+      </sc-if>
+      <sc-if value="{{ loggedOut }}" hint-placeholder-val="{{ false }}">
+        <button onClick="{{ goAuth }}" style="background:#241C18;color:#fff;border:none;border-radius:999px;padding:11px 18px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;white-space:nowrap;">Войти</button>
+      </sc-if>
+    </div>
+    <div style="max-width:1200px;margin:0 auto;padding:0 24px 12px;display:flex;gap:6px;flex-wrap:wrap;">
+      <sc-for list="{{ navCats }}" as="c" hint-placeholder-count="5">
+        <button onClick="{{ c.click }}" style="background:{{ c.bg }};color:{{ c.fg }};border:1px solid {{ c.bd }};border-radius:999px;padding:7px 15px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;">{{ c.name }}</button>
+      </sc-for>
+    </div>
+  </header>
+
+  <!-- ============ HOME ============ -->
+  <sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+  <main style="max-width:1200px;margin:0 auto;padding:24px;animation:muIn .3s ease;">
+    <section style="display:flex;gap:28px;flex-wrap:wrap;align-items:stretch;margin-bottom:18px;">
+      <div style="flex:1;min-width:300px;background:#fff;border:1px solid #EFE7DE;border-radius:26px;padding:48px 44px;display:flex;flex-direction:column;justify-content:center;">
+        <span style="align-self:flex-start;background:#F6E4E0;color:#E0115F;font-weight:700;font-size:12px;padding:6px 13px;border-radius:999px;margin-bottom:18px;">5% баллами с каждой покупки</span>
+        <h1 style="font-family:'Unbounded',sans-serif;font-weight:700;font-size:44px;line-height:1.04;letter-spacing:-1.2px;margin:0 0 16px;">Всё для счастливого питомца</h1>
+        <p style="font-size:17px;line-height:1.5;color:#7C6F65;margin:0 0 28px;max-width:440px;">Корма, лакомства, игрушки и аксессуары проверенных брендов. Быстрая доставка и бонусы за каждый заказ.</p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <button onClick="{{ goCatalog }}" style="background:#E0115F;color:#fff;border:none;border-radius:999px;padding:15px 30px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;">Перейти в каталог</button>
+          <button onClick="{{ goLoyalty }}" style="background:#fff;color:#241C18;border:1px solid #E4D8CD;border-radius:999px;padding:15px 26px;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer;">О программе баллов</button>
+        </div>
+      </div>
+      <div style="flex:1;min-width:280px;border-radius:26px;overflow:hidden;background-color:#F3E8DA;display:flex;min-height:340px;border:1px solid #EADFD0;">
+        <img src="images/cover.png" alt="Всё для счастливого питомца" style="width:100%;height:100%;min-height:340px;object-fit:cover;display:block;" />
+      </div>
+    </section>
+
+    <section style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:34px;">
+      <div style="background:#fff;border:1px solid #EFE7DE;border-radius:18px;padding:20px 22px;"><div style="font-weight:700;font-size:15px;margin-bottom:4px;">Доставка за 2 часа</div><div style="font-size:13px;color:#8A7C71;">по городу, от 1 500 ₽ бесплатно</div></div>
+      <div style="background:#fff;border:1px solid #EFE7DE;border-radius:18px;padding:20px 22px;"><div style="font-weight:700;font-size:15px;margin-bottom:4px;">Кэшбэк баллами</div><div style="font-size:13px;color:#8A7C71;">5% возвращаем на бонусный счёт</div></div>
+      <div style="background:#fff;border:1px solid #EFE7DE;border-radius:18px;padding:20px 22px;"><div style="font-weight:700;font-size:15px;margin-bottom:4px;">Проверенные бренды</div><div style="font-size:13px;color:#8A7C71;">только сертифицированные товары</div></div>
+    </section>
+
+    <h2 style="font-family:'Unbounded',sans-serif;font-weight:600;font-size:24px;letter-spacing:-.5px;margin:0 0 16px;">Категории</h2>
+    <section style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:38px;">
+      <sc-for list="{{ homeCats }}" as="c" hint-placeholder-count="4">
+        <div onClick="{{ c.click }}" style="cursor:pointer;border-radius:20px;overflow:hidden;border:1px solid #EFE7DE;background:#fff;" style-hover="border-color:#241C18;">
+          <div style="height:120px;background-color:{{ c.tint }};background-image:repeating-linear-gradient(45deg,rgba(36,28,24,.04) 0 12px,transparent 12px 24px);"></div>
+          <div style="padding:14px 16px;"><div style="font-weight:700;font-size:15px;">{{ c.name }}</div><div style="font-size:12px;color:#8A7C71;margin-top:2px;">{{ c.count }} товаров</div></div>
+        </div>
+      </sc-for>
+    </section>
+
+    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+      <h2 style="font-family:'Unbounded',sans-serif;font-weight:600;font-size:24px;letter-spacing:-.5px;margin:0;">Популярное</h2>
+      <button onClick="{{ goCatalog }}" style="background:none;border:none;color:#E0115F;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;">Весь каталог →</button>
+    </div>
+    <section style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-bottom:36px;">
+      <sc-for list="{{ featured }}" as="p" hint-placeholder-count="8">
+        <div style="background:#fff;border:1px solid #EFE7DE;border-radius:20px;overflow:hidden;display:flex;flex-direction:column;" style-hover="border-color:#241C18;">
+          <div onClick="{{ p.open }}" style="position:relative;cursor:pointer;aspect-ratio:1/1;background-color:{{ p.tint }};background-image:repeating-linear-gradient(45deg,rgba(36,28,24,.045) 0 11px,transparent 11px 22px);display:flex;align-items:center;justify-content:center;">
+            <img src="{{ p.img }}" alt="{{ p.name }}" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;" />
+            <sc-if value="{{ p.hasTag }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;top:12px;left:12px;background:#fff;color:#E0115F;font-weight:700;font-size:11px;padding:4px 9px;border-radius:999px;">{{ p.tag }}</span></sc-if>
+          </div>
+          <div style="padding:14px 15px 16px;display:flex;flex-direction:column;flex:1;">
+            <div onClick="{{ p.open }}" style="cursor:pointer;font-weight:600;font-size:14px;line-height:1.3;margin-bottom:3px;">{{ p.name }}</div>
+            <div style="font-size:12px;color:#8A7C71;margin-bottom:12px;">{{ p.sub }}</div>
+            <div style="margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <div><div style="font-weight:700;font-size:16px;">{{ p.priceStr }}</div><div style="font-size:11px;color:#C8902A;font-weight:600;">{{ p.pts }} баллов</div></div>
+              <button onClick="{{ p.add }}" style="background:#241C18;color:#fff;border:none;width:40px;height:40px;border-radius:50%;font-size:20px;cursor:pointer;flex-shrink:0;" style-hover="background:#E0115F;">+</button>
+            </div>
+          </div>
+        </div>
+      </sc-for>
+    </section>
+
+    <section onClick="{{ goLoyalty }}" style="cursor:pointer;background:#241C18;border-radius:26px;padding:40px 44px;color:#fff;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;">
+      <div>
+        <div style="font-family:'Unbounded',sans-serif;font-weight:600;font-size:26px;letter-spacing:-.5px;margin-bottom:8px;">Программа лояльности «Хвостик»</div>
+        <div style="font-size:15px;color:#C9BEB4;max-width:480px;">Копите баллы с каждой покупки и оплачивайте ими до 50% следующего заказа. Чем больше заказов — тем выше статус.</div>
+      </div>
+      <span style="background:#E0115F;color:#fff;padding:14px 26px;border-radius:999px;font-weight:700;font-size:15px;white-space:nowrap;">Узнать больше →</span>
+    </section>
+  </main>
+  </sc-if>
+
+  <!-- ============ CATALOG ============ -->
+  <sc-if value="{{ isCatalog }}" hint-placeholder-val="{{ false }}">
+  <main style="max-width:1200px;margin:0 auto;padding:24px;animation:muIn .3s ease;">
+    <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:18px;flex-wrap:wrap;">
+      <h1 style="font-family:'Unbounded',sans-serif;font-weight:600;font-size:30px;letter-spacing:-.6px;margin:0;">{{ catTitle }}</h1>
+      <span style="font-size:14px;color:#8A7C71;">{{ catCount }} товаров</span>
+    </div>
+    <sc-if value="{{ noResults }}" hint-placeholder-val="{{ false }}">
+      <div style="background:#fff;border:1px solid #EFE7DE;border-radius:20px;padding:60px;text-align:center;color:#8A7C71;">Ничего не найдено. Попробуйте изменить запрос.</div>
+    </sc-if>
+    <section style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;">
+      <sc-for list="{{ products }}" as="p" hint-placeholder-count="9">
+        <div style="background:#fff;border:1px solid #EFE7DE;border-radius:20px;overflow:hidden;display:flex;flex-direction:column;" style-hover="border-color:#241C18;">
+          <div onClick="{{ p.open }}" style="position:relative;cursor:pointer;aspect-ratio:1/1;background-color:{{ p.tint }};background-image:repeating-linear-gradient(45deg,rgba(36,28,24,.045) 0 11px,transparent 11px 22px);display:flex;align-items:center;justify-content:center;">
+            <img src="{{ p.img }}" alt="{{ p.name }}" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;" />
+            <sc-if value="{{ p.hasTag }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;top:12px;left:12px;background:#fff;color:#E0115F;font-weight:700;font-size:11px;padding:4px 9px;border-radius:999px;">{{ p.tag }}</span></sc-if>
+          </div>
+          <div style="padding:14px 15px 16px;display:flex;flex-direction:column;flex:1;">
+            <div onClick="{{ p.open }}" style="cursor:pointer;font-weight:600;font-size:14px;line-height:1.3;margin-bottom:3px;">{{ p.name }}</div>
+            <div style="font-size:12px;color:#8A7C71;margin-bottom:12px;">{{ p.sub }}</div>
+            <div style="margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <div><div style="font-weight:700;font-size:16px;">{{ p.priceStr }}</div><div style="font-size:11px;color:#C8902A;font-weight:600;">{{ p.pts }} баллов</div></div>
+              <button onClick="{{ p.add }}" style="background:#241C18;color:#fff;border:none;width:40px;height:40px;border-radius:50%;font-size:20px;cursor:pointer;flex-shrink:0;" style-hover="background:#E0115F;">+</button>
+            </div>
+          </div>
+        </div>
+      </sc-for>
+    </section>
+  </main>
+  </sc-if>
+
+  <!-- ============ PRODUCT ============ -->
+  <sc-if value="{{ isProduct }}" hint-placeholder-val="{{ false }}">
+  <main style="max-width:1100px;margin:0 auto;padding:24px;animation:muIn .3s ease;">
+    <button onClick="{{ goCatalog }}" style="background:none;border:none;color:#8A7C71;font-family:inherit;font-size:14px;cursor:pointer;margin-bottom:16px;padding:0;">← Назад в каталог</button>
+    <section style="display:flex;gap:36px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:300px;position:relative;border-radius:24px;border:1px solid #EFE7DE;aspect-ratio:1/1;background-color:{{ product.tint }};background-image:repeating-linear-gradient(45deg,rgba(36,28,24,.045) 0 13px,transparent 13px 26px);display:flex;align-items:center;justify-content:center;">
+        <img src="{{ product.img }}" alt="{{ product.name }}" style="width:100%;height:100%;object-fit:cover;border-radius:24px;display:block;" />
+        <sc-if value="{{ product.hasTag }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;top:16px;left:16px;background:#fff;color:#E0115F;font-weight:700;font-size:12px;padding:6px 12px;border-radius:999px;">{{ product.tag }}</span></sc-if>
+      </div>
+      <div style="flex:1;min-width:300px;">
+        <div style="font-size:13px;color:#E0115F;font-weight:600;margin-bottom:8px;">{{ product.cat }}</div>
+        <h1 style="font-family:'Unbounded',sans-serif;font-weight:600;font-size:30px;line-height:1.1;letter-spacing:-.6px;margin:0 0 6px;">{{ product.name }}</h1>
+        <div style="font-size:15px;color:#8A7C71;margin-bottom:20px;">{{ product.sub }}</div>
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:22px;">
+          <div style="font-family:'Unbounded',sans-serif;font-weight:600;font-size:30px;">{{ product.priceStr }}</div>
+          <span style="background:#FBF1DC;color:#9A6B14;font-weight:700;font-size:13px;padding:7px 13px;border-radius:999px;">{{ product.ptsBig }} баллов</span>
+        </div>
+        <p style="font-size:15px;line-height:1.55;color:#594F47;margin:0 0 20px;">{{ product.desc }}</p>
+        <ul style="list-style:none;padding:0;margin:0 0 26px;display:flex;flex-direction:column;gap:9px;">
+          <sc-for list="{{ product.bullets }}" as="b" hint-placeholder-count="3">
+            <li style="display:flex;align-items:center;gap:10px;font-size:14px;color:#3F362F;"><span style="width:6px;height:6px;border-radius:50%;background:#E0115F;flex-shrink:0;"></span>{{ b }}</li>
+          </sc-for>
+        </ul>
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:4px;border:1px solid #E4D8CD;border-radius:999px;padding:6px;">
+            <button onClick="{{ product.dec }}" style="width:36px;height:36px;border:none;background:#F6F0E9;border-radius:50%;font-size:20px;cursor:pointer;">−</button>
+            <span style="min-width:34px;text-align:center;font-weight:700;font-size:16px;">{{ product.qty }}</span>
+            <button onClick="{{ product.inc }}" style="width:36px;height:36px;border:none;background:#F6F0E9;border-radius:50%;font-size:20px;cursor:pointer;">+</button>
+          </div>
+          <button onClick="{{ product.addN }}" style="flex:1;min-width:180px;background:#E0115F;color:#fff;border:none;border-radius:999px;padding:16px 30px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;">Добавить в корзину</button>
+        </div>
+        <div style="margin-top:16px;font-size:13px;color:#8A7C71;">Доставка за 2 часа · бесплатно от 1 500 ₽</div>
+      </div>
+    </section>
+    <h2 style="font-family:'Unbounded',sans-serif;font-weight:600;font-size:22px;letter-spacing:-.5px;margin:42px 0 16px;">Похожие товары</h2>
+    <section style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;">
+      <sc-for list="{{ product.related }}" as="p" hint-placeholder-count="3">
+        <div style="background:#fff;border:1px solid #EFE7DE;border-radius:20px;overflow:hidden;display:flex;flex-direction:column;" style-hover="border-color:#241C18;">
+          <div onClick="{{ p.open }}" style="cursor:pointer;aspect-ratio:1/1;background-color:{{ p.tint }};background-image:repeating-linear-gradient(45deg,rgba(36,28,24,.045) 0 11px,transparent 11px 22px);display:flex;align-items:center;justify-content:center;"><img src="{{ p.img }}" alt="{{ p.name }}" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;" /></div>
+          <div style="padding:14px 15px 16px;display:flex;flex-direction:column;flex:1;">
+            <div onClick="{{ p.open }}" style="cursor:pointer;font-weight:600;font-size:14px;line-height:1.3;margin-bottom:12px;">{{ p.name }}</div>
+            <div style="margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <div style="font-weight:700;font-size:16px;">{{ p.priceStr }}</div>
+              <button onClick="{{ p.add }}" style="background:#241C18;color:#fff;border:none;width:40px;height:40px;border-radius:50%;font-size:20px;cursor:pointer;" style-hover="background:#E0115F;">+</button>
+            </div>
+          </div>
+        </div>
+      </sc-for>
+    </section>
+  </main>
+  </sc-if>
+
+  <!-- ============ CART ============ -->
+  <sc-if value="{{ isCart }}" hint-placeholder-val="{{ false }}">
+  <main style="max-width:1000px;margin:0 auto;padding:24px;animation:muIn .3s ease;">
+    <h1 style="font-family:'Unbounded',sans-serif;font-weight:600;font-size:30px;letter-spacing:-.6px;margin:0 0 20px;">Корзина</h1>
+    <sc-if value="{{ cart.empty }}" hint-placeholder-val="{{ true }}">
+      <div style="background:#fff;border:1px solid #EFE7DE;border-radius:22px;padding:64px;text-align:center;">
+        <div style="font-size:17px;font-weight:600;margin-bottom:8px;">В корзине пока пусто</div>
+        <div style="font-size:14px;color:#8A7C71;margin-bottom:22px;">Самое время выбрать что-нибудь для питомца.</div>
+        <button onClick="{{ goCatalog }}" style="background:#E0115F;color:#fff;border:none;border-radius:999px;padding:14px 28px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;">В каталог</button>
+      </div>
+    </sc-if>
+    <sc-if value="{{ cart.hasItems }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start;">
+      <div style="flex:2;min-width:320px;display:flex;flex-direction:column;gap:12px;">
+        <sc-for list="{{ cart.items }}" as="it" hint-placeholder-count="2">
+          <div style="background:#fff;border:1px solid #EFE7DE;border-radius:18px;padding:14px;display:flex;gap:14px;align-items:center;">
+            <img src="{{ it.img }}" alt="{{ it.name }}" style="width:84px;height:84px;flex-shrink:0;border-radius:14px;background-color:{{ it.tint }};object-fit:cover;display:block;" />
+            <div style="flex:1;min-width:0;">
+              <div style="font-weight:600;font-size:15px;margin-bottom:2px;">{{ it.name }}</div>
+              <div style="font-size:12px;color:#8A7C71;margin-bottom:8px;">{{ it.sub }}</div>
+              <div style="display:flex;align-items:center;gap:4px;border:1px solid #E4D8CD;border-radius:999px;padding:4px;width:fit-content;">
+                <button onClick="{{ it.dec }}" style="width:28px;height:28px;border:none;background:#F6F0E9;border-radius:50%;font-size:16px;cursor:pointer;">−</button>
+                <span style="min-width:28px;text-align:center;font-weight:700;font-size:14px;">{{ it.qty }}</span>
+                <button onClick="{{ it.inc }}" style="width:28px;height:28px;border:none;background:#F6F0E9;border-radius:50%;font-size:16px;cursor:pointer;">+</button>
+              </div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-weight:700;font-size:16px;">{{ it.lineStr }}</div>
+              <button onClick="{{ it.remove }}" style="background:none;border:none;color:#B6A99D;font-family:inherit;font-size:12px;cursor:pointer;margin-top:6px;padding:0;">Удалить</button>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="flex:1;min-width:260px;background:#fff;border:1px solid #EFE7DE;border-radius:20px;padding:24px;position:sticky;top:140px;">
+        <div style="font-weight:700;font-size:17px;margin-bottom:16px;">Итог</div>
+        <div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:10px;color:#594F47;"><span>Товары ({{ cart.count }})</span><span>{{ cart.subStr }}</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:14px;color:#594F47;"><span>Доставка</span><span style="color:{{ cart.delivColor }};font-weight:600;">{{ cart.delivStr }}</span></div>
+        <sc-if value="{{ cart.showFreeLeft }}" hint-placeholder-val="{{ false }}"><div style="font-size:12px;color:#8A7C71;background:#F6F0E9;border-radius:10px;padding:8px 11px;margin-bottom:14px;">Добавьте товаров на {{ cart.freeLeft }} до бесплатной доставки</div></sc-if>
+        <div style="border-top:1px solid #EFE7DE;padding-top:14px;display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;"><span style="font-weight:700;font-size:16px;">К оплате</span><span style="font-family:'Unbounded',sans-serif;font-weight:600;font-size:22px;">{{ cart.totalStr }}</span></div>
+        <div style="font-size:12px;color:#C8902A;font-weight:600;margin-bottom:18px;">Вернётся {{ cart.earnStr }} баллов</div>
+        <button onClick="{{ goCheckout }}" style="width:100%;background:#E0115F;color:#fff;border:none;border-radius:999px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;">Оформить заказ</button>
+      </div>
+    </div>
+    </sc-if>
+  </main>
+  </sc-if>
+
+  <!-- ============ CHECKOUT ============ -->
+  <sc-if value="{{ isCheckout }}" hint-placeholder-val="{{ false }}">
+  <main style="max-width:1000px;margin:0 auto;padding:24px;animation:muIn .3s ease;">
+    <button onClick="{{ goCart }}" style="background:none;border:none;color:#8A7C71;font-family:inherit;font-size:14px;cursor:pointer;margin-bottom:14px;padding:0;">← Назад в корзину</button>
+    <h1 style="font-family:'Unbounded',sans-serif;font-weight:600;font-size:30px;letter-spacing:-.6px;margin:0 0 20px;">Оформление заказа</h1>
+    <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start;">
+      <div style="flex:2;min-width:320px;display:flex;flex-direction:column;gap:16px;">
+        <div style="background:#fff;border:1px solid #EFE7DE;border-radius:20px;padding:22px;">
+          <div style="font-weight:700;font-size:16px;margin-bottom:14px;">Доставка</div>
+          <div style="display:flex;flex-direction:column;gap:11px;">
+            <input value="{{ chName }}" onChange="{{ onChName }}" placeholder="Имя и фамилия" style="border:1px solid #E4D8CD;border-radius:12px;padding:13px 15px;font-family:inherit;font-size:14px;" />
+            <input value="{{ chAddr }}" onChange="{{ onChAddr }}" placeholder="Адрес доставки" style="border:1px solid #E4D8CD;border-radius:12px;padding:13px 15px;font-family:inherit;font-size:14px;" />
+            <input value="{{ chPhone }}" onChange="{{ onChPhone }}" placeholder="Телефон" style="border:1px solid #E4D8CD;border-radius:12px;padding:13px 15px;font-family:inherit;font-size:14px;" />
+          </div>
+        </div>
+        <div style="background:#fff;border:1px solid #EFE7DE;border-radius:20px;padding:22px;">
+          <div style="font-weight:700;font-size:16px;margin-bottom:14px;">Способ оплаты</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <div style="border:2px solid #E0115F;border-radius:12px;padding:13px 18px;font-weight:600;font-size:14px;">Картой онлайн</div>
+            <div style="border:1px solid #E4D8CD;border-radius:12px;padding:13px 18px;font-weight:500;font-size:14px;color:#8A7C71;">При получении</div>
+          </div>
+        </div>
+        <div style="background:#241C18;border-radius:20px;padding:22px;color:#fff;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+          <div>
+            <div style="font-weight:700;font-size:16px;margin-bottom:3px;">Оплатить баллами</div>
+            <sc-if value="{{ checkout.canRedeem }}" hint-placeholder-val="{{ true }}"><div style="font-size:13px;color:#C9BEB4;">Доступно {{ checkout.balanceStr }} Б · спишем до {{ checkout.maxRedeemStr }} Б (50% заказа)</div></sc-if>
+            <sc-if value="{{ checkout.noRedeem }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;color:#C9BEB4;">Недостаточно баллов для этого заказа</div></sc-if>
+          </div>
+          <div onClick="{{ checkout.toggle }}" style="width:58px;height:32px;border-radius:999px;background:{{ checkout.switchBg }};position:relative;cursor:pointer;flex-shrink:0;transition:background .2s;">
+            <div style="position:absolute;top:3px;left:{{ checkout.knobX }};width:26px;height:26px;border-radius:50%;background:#fff;transition:left .2s;"></div>
+          </div>
+        </div>
+      </div>
+      <div style="flex:1;min-width:260px;background:#fff;border:1px solid #EFE7DE;border-radius:20px;padding:24px;position:sticky;top:140px;">
+        <div style="font-weight:700;font-size:17px;margin-bottom:16px;">Ваш заказ</div>
+        <div style="display:flex;flex-direction:column;gap:9px;margin-bottom:14px;max-height:180px;overflow:auto;">
+          <sc-for list="{{ checkout.items }}" as="it" hint-placeholder-count="2">
+            <div style="display:flex;justify-content:space-between;font-size:13px;color:#594F47;gap:8px;"><span style="flex:1;">{{ it.name }} × {{ it.qty }}</span><span style="font-weight:600;white-space:nowrap;">{{ it.lineStr }}</span></div>
+          </sc-for>
+        </div>
+        <div style="border-top:1px solid #EFE7DE;padding-top:14px;display:flex;justify-content:space-between;font-size:14px;margin-bottom:9px;color:#594F47;"><span>Товары</span><span>{{ checkout.subStr }}</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:9px;color:#594F47;"><span>Доставка</span><span style="color:{{ checkout.delivColor }};font-weight:600;">{{ checkout.delivStr }}</span></div>
+        <sc-if value="{{ checkout.usePoints }}" hint-placeholder-val="{{ false }}"><div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:9px;color:#C8902A;font-weight:600;"><span>Баллы</span><span>{{ checkout.redeemStr }}</span></div></sc-if>
+        <div style="border-top:1px solid #EFE7DE;padding-top:14px;display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;"><span style="font-weight:700;font-size:16px;">К оплате</span><span style="font-family:'Unbounded',sans-serif;font-weight:600;font-size:22px;">{{ checkout.totalStr }}</span></div>
+        <div style="font-size:12px;color:#C8902A;font-weight:600;margin-bottom:18px;">Начислим {{ checkout.earnStr }} баллов</div>
+        <button onClick="{{ checkout.place }}" style="width:100%;background:#E0115F;color:#fff;border:none;border-radius:999px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;">Подтвердить заказ</button>
+      </div>
+    </div>
+  </main>
+  </sc-if>
+
+  <!-- ============ AUTH ============ -->
+  <sc-if value="{{ isAuth }}" hint-placeholder-val="{{ false }}">
+  <main style="max-width:440px;margin:0 auto;padding:48px 24px;animation:muIn .3s ease;">
+    <div style="background:#fff;border:1px solid #EFE7DE;border-radius:24px;padding:36px;">
+      <div style="display:flex;gap:6px;background:#F6F0E9;padding:5px;border-radius:999px;margin-bottom:26px;">
+        <button onClick="{{ setLogin }}" style="flex:1;border:none;border-radius:999px;padding:11px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;background:{{ auth.loginBg }};color:{{ auth.loginFg }};">Вход</button>
+        <button onClick="{{ setRegister }}" style="flex:1;border:none;border-radius:999px;padding:11px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;background:{{ auth.regBg }};color:{{ auth.regFg }};">Регистрация</button>
+      </div>
+      <h1 style="font-family:'Unbounded',sans-serif;font-weight:600;font-size:24px;letter-spacing:-.4px;margin:0 0 6px;">{{ auth.title }}</h1>
+      <p style="font-size:14px;color:#8A7C71;margin:0 0 24px;">{{ auth.subtitle }}</p>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <sc-if value="{{ auth.isRegister }}" hint-placeholder-val="{{ false }}">
+          <input value="{{ fName }}" onChange="{{ onFName }}" placeholder="Как вас зовут" style="border:1px solid #E4D8CD;border-radius:12px;padding:14px 15px;font-family:inherit;font-size:14px;" />
+        </sc-if>
+        <input value="{{ fEmail }}" onChange="{{ onFEmail }}" placeholder="Email" style="border:1px solid #E4D8CD;border-radius:12px;padding:14px 15px;font-family:inherit;font-size:14px;" />
+        <input value="{{ fPass }}" onChange="{{ onFPass }}" type="password" placeholder="Пароль" style="border:1px solid #E4D8CD;border-radius:12px;padding:14px 15px;font-family:inherit;font-size:14px;" />
+      </div>
+      <button onClick="{{ submitAuth }}" style="width:100%;background:#E0115F;color:#fff;border:none;border-radius:999px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;margin-top:20px;">{{ auth.cta }}</button>
+      <sc-if value="{{ auth.isRegister }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top:18px;background:#FBF1DC;border:1px solid #EFD9A8;border-radius:14px;padding:14px 16px;font-size:13px;color:#9A6B14;">🎁 Дарим 300 приветственных баллов за регистрацию</div>
+      </sc-if>
+      <div style="margin-top:18px;text-align:center;font-size:12px;color:#A89A8D;">Демо-режим: введите любые данные, чтобы войти</div>
+    </div>
+  </main>
+  </sc-if>
+
+  <!-- ============ ACCOUNT ============ -->
+  <sc-if value="{{ isAccount }}" hint-placeholder-val="{{ false }}">
+  <main style="max-width:1000px;margin:0 auto;padding:24px;animation:muIn .3s ease;">
+    <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:stretch;margin-bottom:28px;">
+      <div style="flex:1;min-width:260px;background:#fff;border:1px solid #EFE7DE;border-radius:22px;padding:28px;">
+        <div style="font-size:13px;color:#8A7C71;margin-bottom:4px;">Личный кабинет</div>
+        <div style="font-family:'Unbounded',sans-serif;font-weight:600;font-size:26px;letter-spacing:-.5px;margin-bottom:18px;">{{ userName }}</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button onClick="{{ goCatalog }}" style="background:#241C18;color:#fff;border:none;border-radius:999px;padding:11px 20px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;">За покупками</button>
+          <button onClick="{{ logout }}" style="background:#fff;color:#8A7C71;border:1px solid #E4D8CD;border-radius:999px;padding:11px 20px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;">Выйти</button>
+        </div>
+      </div>
+      <div style="flex:1;min-width:260px;background:#241C18;border-radius:22px;padding:28px;color:#fff;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
+          <span style="font-size:13px;color:#C9BEB4;">Бонусный счёт «Хвостик»</span>
+          <span style="background:#C8902A;color:#241C18;font-weight:700;font-size:12px;padding:4px 11px;border-radius:999px;">Статус: {{ loyalty.tier }}</span>
+        </div>
+        <div style="font-family:'Unbounded',sans-serif;font-weight:600;font-size:38px;margin:6px 0 2px;">{{ loyalty.pointsStr }} <span style="font-size:20px;color:#C8902A;">Б</span></div>
+        <div style="font-size:13px;color:#C9BEB4;margin-bottom:18px;">1 балл = 1 ₽ · оплачивайте до 50% заказа</div>
+        <div style="height:8px;background:rgba(255,255,255,.14);border-radius:999px;overflow:hidden;margin-bottom:8px;"><div style="height:100%;width:{{ loyalty.progress }};background:#C8902A;border-radius:999px;"></div></div>
+        <div style="font-size:12px;color:#C9BEB4;">{{ loyalty.nextLabel }}</div>
+      </div>
+    </div>
+
+    <h2 style="font-family:'Unbounded',sans-serif;font-weight:600;font-size:22px;letter-spacing:-.5px;margin:0 0 16px;">История заказов</h2>
+    <sc-if value="{{ noOrders }}" hint-placeholder-val="{{ false }}">
+      <div style="background:#fff;border:1px solid #EFE7DE;border-radius:20px;padding:48px;text-align:center;color:#8A7C71;">Пока нет заказов. <span onClick="{{ goCatalog }}" style="color:#E0115F;cursor:pointer;font-weight:600;">Начать покупки →</span></div>
+    </sc-if>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <sc-for list="{{ orders }}" as="o" hint-placeholder-count="3">
+        <div style="background:#fff;border:1px solid #EFE7DE;border-radius:18px;padding:18px 20px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
+          <div style="width:56px;height:56px;flex-shrink:0;border-radius:14px;background-color:{{ o.tint }};background-image:repeating-linear-gradient(45deg,rgba(36,28,24,.05) 0 8px,transparent 8px 16px);"></div>
+          <div style="flex:1;min-width:180px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:3px;flex-wrap:wrap;">
+              <span style="font-weight:700;font-size:15px;">Заказ №{{ o.id }}</span>
+              <span style="font-size:12px;font-weight:600;color:{{ o.statusColor }};background:{{ o.statusBg }};padding:3px 10px;border-radius:999px;">{{ o.status }}</span>
+            </div>
+            <div style="font-size:13px;color:#8A7C71;margin-bottom:2px;">{{ o.date }} · {{ o.count }} товара</div>
+            <div style="font-size:13px;color:#594F47;">{{ o.itemsStr }}</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-weight:700;font-size:17px;">{{ o.totalStr }}</div>
+            <div style="font-size:12px;color:#C8902A;font-weight:600;">{{ o.ptsStr }} баллов</div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </main>
+  </sc-if>
+
+  <footer style="border-top:1px solid #EDE3D9;margin-top:40px;background:#FAF6F1;">
+    <div style="max-width:1200px;margin:0 auto;padding:36px 24px;display:flex;gap:30px;flex-wrap:wrap;justify-content:space-between;">
+      <div style="max-width:280px;">
+        <div style="font-family:'Unbounded',sans-serif;font-weight:700;font-size:18px;margin-bottom:10px;">МУР<span style="color:#E0115F;">&</span>ГАВ</div>
+        <div style="font-size:13px;color:#8A7C71;line-height:1.5;">Интернет-магазин зоотоваров с заботой о питомцах и кэшбэком баллами.</div>
+      </div>
+      <div style="display:flex;gap:48px;flex-wrap:wrap;">
+        <div><div style="font-weight:700;font-size:13px;margin-bottom:10px;">Каталог</div><div style="font-size:13px;color:#8A7C71;line-height:2;">Корма<br>Лакомства<br>Игрушки<br>Аксессуары</div></div>
+        <div><div style="font-weight:700;font-size:13px;margin-bottom:10px;">Покупателям</div><div style="font-size:13px;color:#8A7C71;line-height:2;">Доставка<br>Оплата<br>Программа баллов<br>Контакты</div></div>
+      </div>
+    </div>
+    <div style="border-top:1px solid #EDE3D9;padding:18px 24px;text-align:center;font-size:12px;color:#A89A8D;">© 2026 МУР&ГАВ · Демонстрационный прототип</div>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:900},&quot;pointsRate&quot;:{&quot;editor&quot;:&quot;float&quot;,&quot;default&quot;:0.05,&quot;tsType&quot;:&quot;number&quot;,&quot;min&quot;:0,&quot;max&quot;:0.2,&quot;step&quot;:0.01},&quot;freeFrom&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:1500,&quot;tsType&quot;:&quot;number&quot;,&quot;min&quot;:0,&quot;max&quot;:5000,&quot;step&quot;:100},&quot;startPoints&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:1840,&quot;tsType&quot;:&quot;number&quot;,&quot;min&quot;:0,&quot;max&quot;:10000,&quot;step&quot;:10}}">
+class Component extends DCLogic {
+  products = [
+    {id:'f1', name:'Сухой корм «Лосось & рис»', sub:'для взрослых собак · 4 кг', cat:'Корма', price:2890, tag:'Хит'},
+    {id:'f2', name:'Влажный корм «Индейка»', sub:'для кошек · 12 шт', cat:'Корма', price:1490, tag:''},
+    {id:'f3', name:'Беззерновой корм для котят', sub:'курица · 2 кг', cat:'Корма', price:2190, tag:'Новинка'},
+    {id:'f4', name:'Корм «Ягнёнок» для пожилых собак', sub:'3 кг', cat:'Корма', price:2650, tag:''},
+    {id:'t1', name:'Хрустящие подушечки с курицей', sub:'лакомство · 100 г', cat:'Лакомства', price:340, tag:''},
+    {id:'t2', name:'Лакомство-палочки для собак', sub:'5 шт', cat:'Лакомства', price:290, tag:'Хит'},
+    {id:'t3', name:'Дентал-косточки для зубов', sub:'7 шт', cat:'Лакомства', price:520, tag:''},
+    {id:'y1', name:'Мячик-пищалка резиновый', sub:'латекс · 7 см', cat:'Игрушки', price:390, tag:''},
+    {id:'y2', name:'Дразнилка-удочка для кошек', sub:'перо', cat:'Игрушки', price:450, tag:'Новинка'},
+    {id:'y3', name:'Канатный узел для собак', sub:'хлопок', cat:'Игрушки', price:590, tag:''},
+    {id:'a1', name:'Поводок-рулетка 5 м', sub:'до 20 кг', cat:'Аксессуары', price:1290, tag:''},
+    {id:'a2', name:'Миска двойная на подставке', sub:'нерж. сталь', cat:'Аксессуары', price:990, tag:''},
+    {id:'a3', name:'Лежанка-подушка', sub:'размер M', cat:'Аксессуары', price:2390, tag:'Хит'},
+  ];
+  cats = ['Корма','Лакомства','Игрушки','Аксессуары'];
+  tintMap = {'Корма':'#F3E8DA','Лакомства':'#F6E4E0','Игрушки':'#E7EDE6','Аксессуары':'#EBE6F0'};
+  phMap = {'Корма':'фото · корм','Лакомства':'фото · лакомство','Игрушки':'фото · игрушка','Аксессуары':'фото · аксессуар'};
+  imgMap = {f1:'f1.webp', f3:'f3.webp', f4:'f4.webp', t1:'t1.webp', t3:'t3.webp', y2:'y2.webp', y3:'y3.webp', a3:'a3.webp'};
+  descMap = {
+    'Корма':'Сбалансированный рацион с натуральным белком в основе, без искусственных красителей и ароматизаторов. Поддерживает здоровье и активность каждый день.',
+    'Лакомства':'Аппетитное угощение для поощрения и дрессировки. Натуральный состав и удобный размер — можно баловать питомца хоть каждый день.',
+    'Игрушки':'Прочная игрушка для активных игр: помогает питомцу выплеснуть энергию, снять стресс и не скучать в одиночестве.',
+    'Аксессуары':'Надёжный и удобный аксессуар на каждый день. Качественные материалы, приятные на ощупь и простые в уходе.',
+  };
+  bulletsMap = {
+    'Корма':['Натуральный белок №1 в составе','Без зерна и сои','Поддержка пищеварения'],
+    'Лакомства':['Без сахара и злаков','Удобно дозировать','Любимый вкус питомцев'],
+    'Игрушки':['Безопасные материалы','Прочность к укусам','Развивает активность'],
+    'Аксессуары':['Износостойкие материалы','Комфортная посадка','Лёгкий уход'],
+  };
+
+  state = {
+    view:'home', cat:'Все', query:'', selId:null, pqty:1,
+    cart:[], usePoints:false, toast:'',
+    authMode:'login', fName:'', fEmail:'', fPass:'',
+    chName:'', chAddr:'', chPhone:'',
+    user:{loggedIn:false, name:'', points:0, tier:''},
+    orders:[],
+  };
+
+  imgFor(id){ return 'images/'+(this.imgMap[id]||(id+'.jpg')); }
+  rate(){ return this.props.pointsRate ?? 0.05; }
+  freeFrom(){ return this.props.freeFrom ?? 1500; }
+  componentWillUnmount(){ clearTimeout(this._t); }
+  flash(m){ this.setState({toast:m}); clearTimeout(this._t); this._t=setTimeout(()=>this.setState({toast:''}),2200); }
+  top(){ try{ window.scrollTo({top:0,behavior:'smooth'}); }catch(e){} }
+  rub(n){ return Math.round(n).toLocaleString('ru-RU')+'\u00A0₽'; }
+  pts(n){ return Math.round(n).toLocaleString('ru-RU'); }
+
+  go(view){ this.setState({view}); this.top(); }
+  openProduct(id){ this.setState({view:'product', selId:id, pqty:1}); this.top(); }
+  setCat(c){ this.setState({view:'catalog', cat:c}); this.top(); }
+
+  addToCart(id,q){ q=q||1; const cart=this.state.cart.map(x=>({...x})); const f=cart.find(x=>x.id===id); if(f) f.qty+=q; else cart.push({id,qty:q}); this.setState({cart}); this.flash('Добавлено в корзину'); }
+  setQty(id,d){ let cart=this.state.cart.map(x=>({...x})); const f=cart.find(x=>x.id===id); if(!f) return; f.qty+=d; cart=cart.filter(x=>x.qty>0); this.setState({cart}); }
+  removeItem(id){ this.setState({cart:this.state.cart.filter(x=>x.id!==id)}); }
+
+  subtotal(){ return this.state.cart.reduce((s,x)=>{const p=this.products.find(pp=>pp.id===x.id);return s+(p?p.price*x.qty:0);},0); }
+  cartCount(){ return this.state.cart.reduce((s,x)=>s+x.qty,0); }
+  delivery(sub){ return this.state.cart.length ? (sub>=this.freeFrom()?0:299) : 0; }
+
+  doLogin(){
+    const name=(this.state.fName.trim())||(this.state.authMode==='login'?'Анна':'Друг');
+    const reg=this.state.authMode==='register';
+    const base=this.props.startPoints ?? 1840;
+    const points = reg ? 300 : base;
+    const orders = reg ? [] : [
+      {id:'4821', date:'14 июня 2026', status:'Доставлен', total:3180, earned:159, itemsStr:'Сухой корм «Лосось & рис», Мячик-пищалка', count:2, tint:'#F3E8DA'},
+      {id:'4710', date:'2 июня 2026', status:'Доставлен', total:1490, earned:74, itemsStr:'Влажный корм «Индейка» 12 шт', count:1, tint:'#F6E4E0'},
+      {id:'4655', date:'21 мая 2026', status:'Отменён', total:990, earned:0, itemsStr:'Миска двойная на подставке', count:1, tint:'#EBE6F0'},
+    ];
+    this.setState({ user:{loggedIn:true, name, points, tier:reg?'Бронза':'Серебро'}, orders, view:'account', fPass:'' });
+    this.flash(reg?('Аккаунт создан · +300 баллов'):('С возвращением, '+name+'!'));
+    this.top();
+  }
+  logout(){ this.setState({user:{loggedIn:false,name:'',points:0,tier:''}, orders:[], view:'home'}); this.flash('Вы вышли из аккаунта'); }
+
+  goCheckout(){
+    if(this.state.cart.length===0){ this.flash('Корзина пуста'); return; }
+    if(!this.state.user.loggedIn){ this.setState({view:'auth', authMode:'login'}); this.flash('Войдите, чтобы оформить заказ'); this.top(); return; }
+    this.setState({view:'checkout'}); this.top();
+  }
+  placeOrder(){
+    const sub=this.subtotal();
+    const maxR=Math.min(this.state.user.points, Math.floor(sub*0.5));
+    const redeem=this.state.usePoints?maxR:0;
+    const deliv=sub>=this.freeFrom()?0:299;
+    const earned=Math.floor((sub-redeem)*this.rate());
+    const names=this.state.cart.map(x=>this.products.find(p=>p.id===x.id).name).join(', ');
+    const order={id:String(4900+Math.floor(Math.random()*99)), date:'Сегодня', status:'В сборке', total:sub-redeem+deliv, earned, itemsStr:names, count:this.cartCount(), tint:'#F3E8DA'};
+    const points=this.state.user.points-redeem+earned;
+    this.setState({orders:[order,...this.state.orders], user:{...this.state.user, points}, cart:[], usePoints:false, view:'account'});
+    this.flash('Заказ оформлен · +'+earned+' баллов');
+    this.top();
+  }
+
+  vmCard(p){
+    return { id:p.id, name:p.name, sub:p.sub, priceStr:this.rub(p.price), pts:'+'+this.pts(p.price*this.rate()),
+      tag:p.tag, hasTag:!!p.tag, tint:this.tintMap[p.cat], ph:this.phMap[p.cat], img:this.imgFor(p.id),
+      open:()=>this.openProduct(p.id), add:()=>this.addToCart(p.id,1) };
+  }
+
+  renderVals(){
+    const S=this.state, U=S.user;
+    const v=S.view;
+    const q=S.query.trim().toLowerCase();
+    const list=this.products.filter(p=> (S.cat==='Все'||p.cat===S.cat) && (!q || p.name.toLowerCase().includes(q)) );
+    const products=list.map(p=>this.vmCard(p));
+
+    // nav cats (header)
+    const mk=(name)=>{ const active=(S.cat===name); return { name, click:()=>this.setCat(name),
+      bg:active?'#241C18':'#fff', fg:active?'#fff':'#594F47', bd:active?'#241C18':'#EBE0D5' }; };
+    const navCats=[mk('Все'),...this.cats.map(mk)];
+    const homeCats=this.cats.map(c=>({ name:c, count:this.products.filter(p=>p.cat===c).length, tint:this.tintMap[c], click:()=>this.setCat(c) }));
+    const featured=['f1','t2','y2','a3','f3','a1','t3','y1'].map(id=>this.vmCard(this.products.find(p=>p.id===id)));
+
+    // product detail
+    const sp=this.products.find(p=>p.id===S.selId);
+    let product=null;
+    if(sp){ product={ ...this.vmCard(sp), cat:sp.cat, desc:this.descMap[sp.cat], bullets:this.bulletsMap[sp.cat],
+      ptsBig:'+'+this.pts(sp.price*this.rate()), qty:S.pqty,
+      inc:()=>this.setState({pqty:S.pqty+1}), dec:()=>this.setState({pqty:Math.max(1,S.pqty-1)}),
+      addN:()=>{ this.addToCart(sp.id,S.pqty); },
+      related:this.products.filter(p=>p.cat===sp.cat&&p.id!==sp.id).slice(0,3).map(p=>this.vmCard(p)) }; }
+
+    // cart
+    const citems=S.cart.map(x=>{ const p=this.products.find(pp=>pp.id===x.id); return {
+      id:x.id, name:p.name, sub:p.sub, qty:x.qty, lineStr:this.rub(p.price*x.qty), tint:this.tintMap[p.cat], img:this.imgFor(x.id),
+      inc:()=>this.setQty(x.id,1), dec:()=>this.setQty(x.id,-1), remove:()=>this.removeItem(x.id) }; });
+    const sub=this.subtotal();
+    const deliv=this.delivery(sub);
+    const cart={ items:citems, empty:citems.length===0, hasItems:citems.length>0, count:this.cartCount(),
+      subStr:this.rub(sub), delivStr:deliv?this.rub(deliv):'Бесплатно', delivColor:deliv?'#594F47':'#1F8A4D',
+      totalStr:this.rub(sub+deliv), earnStr:'+'+this.pts(sub*this.rate()),
+      showFreeLeft: S.cart.length>0 && sub<this.freeFrom(), freeLeft:this.rub(Math.max(0,this.freeFrom()-sub)) };
+
+    // checkout
+    const maxR=Math.min(U.points, Math.floor(sub*0.5));
+    const redeem=S.usePoints?maxR:0;
+    const earned=Math.floor((sub-redeem)*this.rate());
+    const checkout={ items:citems, subStr:this.rub(sub), delivStr:deliv?this.rub(deliv):'Бесплатно', delivColor:deliv?'#594F47':'#1F8A4D',
+      canRedeem:maxR>0, noRedeem:maxR===0, balanceStr:this.pts(U.points), maxRedeemStr:this.pts(maxR),
+      usePoints:S.usePoints, redeemStr:'−'+this.rub(redeem),
+      switchBg:S.usePoints?'#C8902A':'rgba(255,255,255,.22)', knobX:S.usePoints?'29px':'3px',
+      toggle:()=>{ if(maxR>0) this.setState({usePoints:!S.usePoints}); },
+      totalStr:this.rub(sub-redeem+deliv), earnStr:'+'+this.pts(earned), place:()=>this.placeOrder() };
+
+    // account orders
+    const sc={ 'Доставлен':['#1F8A4D','#E6F3EB'], 'В сборке':['#9A6B14','#FBF1DC'], 'В пути':['#2A6FDB','#E7EFFB'], 'Отменён':['#9A8B7E','#F0EAE3'] };
+    const orders=S.orders.map(o=>{ const c=sc[o.status]||sc['В сборке']; return {
+      id:o.id, date:o.date, status:o.status, count:o.count, itemsStr:o.itemsStr, tint:o.tint,
+      totalStr:this.rub(o.total), ptsStr:'+'+this.pts(o.earned), statusColor:c[0], statusBg:c[1] }; });
+
+    // loyalty progress
+    const tiers=[{n:'Бронза',min:0},{n:'Серебро',min:1000},{n:'Золото',min:3000}];
+    let cur=tiers[0]; for(const t of tiers){ if(U.points>=t.min) cur=t; }
+    const idx=tiers.indexOf(cur); const next=tiers[idx+1];
+    let progress='100%', nextLabel='Максимальный статус — спасибо, что с нами!';
+    if(next){ progress=Math.max(4,Math.min(100,Math.round((U.points-cur.min)/(next.min-cur.min)*100)))+'%';
+      nextLabel='До статуса «'+next.n+'» — '+this.pts(next.min-U.points)+' баллов'; }
+    const loyalty={ pointsStr:this.pts(U.points), tier:U.tier||cur.n, progress, nextLabel };
+
+    // auth
+    const isReg=S.authMode==='register';
+    const auth={ isRegister:isReg, mode:S.authMode,
+      title:isReg?'Создать аккаунт':'С возвращением!',
+      subtitle:isReg?'Регистрация за минуту — и баллы уже на счету':'Войдите, чтобы видеть заказы и баллы',
+      cta:isReg?'Зарегистрироваться':'Войти',
+      loginBg:isReg?'transparent':'#fff', loginFg:isReg?'#8A7C71':'#241C18',
+      regBg:isReg?'#fff':'transparent', regFg:isReg?'#241C18':'#8A7C71' };
+
+    return {
+      // toast
+      hasToast:!!S.toast, toast:S.toast,
+      // header
+      query:S.query, onQuery:e=>this.setState({query:e.target.value, view:'catalog'}),
+      loggedIn:U.loggedIn, loggedOut:!U.loggedIn, userName:U.name, pointsStr:this.pts(U.points),
+      cartCount:this.cartCount(), hasCart:this.cartCount()>0,
+      goHome:()=>this.go('home'), goCatalog:()=>this.setCat('Все'), goCart:()=>this.go('cart'),
+      goAccount:()=>this.go('account'), goAuth:()=>{ this.setState({view:'auth'}); this.top(); }, goLoyalty:()=>{ U.loggedIn?this.go('account'):this.setState({view:'auth',authMode:'register'}); this.top(); },
+      goCheckout:()=>this.goCheckout(),
+      navCats,
+      // view flags
+      isHome:v==='home', isCatalog:v==='catalog', isProduct:v==='product'&&!!product,
+      isCart:v==='cart', isCheckout:v==='checkout'&&U.loggedIn, isAuth:v==='auth', isAccount:v==='account'&&U.loggedIn,
+      // home
+      homeCats, featured,
+      // catalog
+      catTitle:S.cat==='Все'?'Каталог':S.cat, catCount:list.length, noResults:list.length===0, products,
+      // product
+      product,
+      // cart / checkout
+      cart, checkout,
+      // auth
+      auth, fName:S.fName, fEmail:S.fEmail, fPass:S.fPass,
+      onFName:e=>this.setState({fName:e.target.value}), onFEmail:e=>this.setState({fEmail:e.target.value}), onFPass:e=>this.setState({fPass:e.target.value}),
+      setLogin:()=>this.setState({authMode:'login'}), setRegister:()=>this.setState({authMode:'register'}), submitAuth:()=>this.doLogin(),
+      // checkout fields
+      chName:S.chName, chAddr:S.chAddr, chPhone:S.chPhone,
+      onChName:e=>this.setState({chName:e.target.value}), onChAddr:e=>this.setState({chAddr:e.target.value}), onChPhone:e=>this.setState({chPhone:e.target.value}),
+      // account
+      orders, noOrders:orders.length===0, loyalty, logout:()=>this.logout(),
+    };
+  }
+}
+</script>
+</body>
+</html>
